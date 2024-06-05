@@ -11,12 +11,34 @@ pub trait Client {
 }
 
 pub struct Translator<T: Client> {
-    client: T,
+    pub client: T,
 }
 
 impl <T: Client> Translator<T> {
+    pub async fn translate<'a>(&'a self, strings: &'a Vec<String>, size: usize) -> Vec<(&str, String)> {
+        let mut targets: HashMap<usize, &str> = HashMap::new();
+        for (idx, value) in strings.iter().enumerate() {
+            if !value.is_empty() {
+                targets.insert(idx, value);
+            }
+        }
+        let mut map = self.translate_map(targets, size).await;
+        let mut result: Vec<(&str, String)> = Vec::new();
+        for (idx, org) in strings.iter().enumerate() {
+            if let Some(ret) = map.remove(&idx) {
+                if let Ok(s) = ret {
+                    result.push((org, s));
+                } else {
+                    result.push((org, String::from("")));
+                }
+            } else {
+                result.push((org, String::from("")));
+            }
+        }
+        result
+    }
 
-    async fn translate(
+    async fn translate_map(
         &self, map: HashMap<usize, &str>, size: usize
     ) -> HashMap<usize, Result<String>> {
         let keys: Vec<usize> = map.keys().cloned().collect();
@@ -72,11 +94,14 @@ mod tests {
         let client = DeeplClient {};
         let translator = Translator{ client };
 
-        let mut map = HashMap::new();
-        map.insert(3, "hello world!");
-        map.insert(7, "hello world~");
-
-        let results = translator.translate(map, 3).await;
+        let mut vec = vec!(
+            String::from("hello world!"),
+            String::from(""),
+            String::from("hello world~"),
+            String::from("hello world!"),
+            String::from(""),
+        );
+        let results = translator.translate(&mut vec, 3).await;
         for result in results {
             println!("{:?}", result);
         }
