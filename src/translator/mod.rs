@@ -4,6 +4,8 @@ use anyhow::{anyhow, Result};
 use futures::future::join_all;
 use crate::utils::list::split_vec_move;
 
+pub mod deepl;
+
 pub trait Client {
     fn translate(&self, str: &str) -> impl std::future::Future<Output = Result<String>> + Send;
 }
@@ -63,7 +65,7 @@ impl <T: Client> Translator<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::deepl::DeeplClient;
+    use deepl::DeeplClient;
 
     #[tokio::test]
     async fn test_translate_parallel() {
