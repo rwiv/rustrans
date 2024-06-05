@@ -1,4 +1,4 @@
-fn split_vec_move<T>(vec: &mut Vec<T>, size: usize) -> Vec<Vec<T>> {
+pub fn split_vec_move<T>(vec: &mut Vec<T>, size: usize) -> Vec<Vec<T>> {
     let mut result = Vec::new();
     let mut sub = Vec::new();
     for _ in 0..vec.len() {
@@ -12,7 +12,7 @@ fn split_vec_move<T>(vec: &mut Vec<T>, size: usize) -> Vec<Vec<T>> {
     result
 }
 
-fn split_vec_ref<T>(vec: &Vec<T>, size: usize) -> Vec<Vec<&T>> {
+pub fn split_vec_ref<T>(vec: &Vec<T>, size: usize) -> Vec<Vec<&T>> {
     let mut result = Vec::new();
     let mut sub = Vec::new();
     for i in 0..vec.len() {
