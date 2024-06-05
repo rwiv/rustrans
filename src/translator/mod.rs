@@ -18,7 +18,7 @@ impl <T: Client> Translator<T> {
     pub async fn translate<'a>(&'a self, strings: &'a Vec<String>, size: usize) -> Vec<(&str, String)> {
         let mut targets: HashMap<usize, &str> = HashMap::new();
         for (idx, value) in strings.iter().enumerate() {
-            if !value.is_empty() {
+            if !value.trim().is_empty() {
                 targets.insert(idx, value);
             }
         }
@@ -96,7 +96,7 @@ mod tests {
 
         let mut vec = vec!(
             String::from("hello world!"),
-            String::from(""),
+            String::from("     "),
             String::from("hello world~"),
             String::from("hello world!"),
             String::from(""),
