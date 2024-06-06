@@ -8,7 +8,7 @@ pub fn read_lines(file_path: &Path) -> io::Result<Vec<String>> {
     reader.lines().collect()
 }
 
-pub fn write_vec(vec: &Vec<String>, file_path: &Path) -> io::Result<()> {
+pub fn write_lines(vec: &Vec<String>, file_path: &Path) -> io::Result<()> {
     let mut file = File::create(file_path)?;
     for s in vec {
         writeln!(file, "{}", s)?;
@@ -36,7 +36,7 @@ mod tests {
         let strings = read_lines(&file_path)?;
 
         let new_file_path = project_root.join("tests").join("test2.txt");
-        write_vec(&strings, &new_file_path)?;
+        write_lines(&strings, &new_file_path)?;
         Ok(())
     }
 }

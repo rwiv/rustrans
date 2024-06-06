@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::mem;
 use anyhow::{anyhow, Result};
 use futures::future::join_all;
-use crate::utils::list::split_vec_move;
+use crate::utils::list::{split_vec_copy};
 
 pub mod deepl;
 
@@ -45,11 +45,11 @@ impl <T: Client> Translator<T> {
         &self, input_map: HashMap<usize, &str>, size: usize,
     ) -> HashMap<usize, Result<String>> {
         let input_keys: Vec<usize> = input_map.keys().cloned().collect();
-        let mut input_values: Vec<&str> = input_map.values().cloned().collect();
+        let input_values: Vec<&str> = input_map.values().cloned().collect();
 
         // parallel request
         let mut translated: Vec<Result<String>> = Vec::new();
-        for sub in split_vec_move(&mut input_values, size) {
+        for sub in split_vec_copy(&input_values, size) {
             let mut tasks = Vec::new();
             for str in sub {
                 tasks.push(self.client.translate(str))

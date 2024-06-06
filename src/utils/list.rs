@@ -1,4 +1,4 @@
-pub fn split_vec_move<T>(vec: &mut Vec<T>, size: usize) -> Vec<Vec<T>> {
+pub fn split_vec_move<T>(mut vec: Vec<T>, size: usize) -> Vec<Vec<T>> {
     let mut result = Vec::new();
     let mut sub = Vec::new();
     for _ in 0..vec.len() {
@@ -26,19 +26,35 @@ pub fn split_vec_ref<T>(vec: &Vec<T>, size: usize) -> Vec<Vec<&T>> {
     result
 }
 
+pub fn split_vec_copy<T: Clone>(vec: &Vec<T>, size: usize) -> Vec<Vec<T>> {
+    let mut result = Vec::new();
+    let mut sub: Vec<T> = Vec::new();
+    for idx in 0..vec.len() {
+        if let Some(elem) = vec.get(idx).cloned() {
+            sub.push(elem);
+        }
+        if sub.len() == size {
+            result.push(sub);
+            sub = Vec::new();
+        }
+    }
+    result.push(sub);
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_split_vec() {
-        let mut v = vec![
+        let v = vec![
             str("1"), str("2"), str("3"), str("4"), str("5"),
             str("6"), str("7"), str("8"), str("9"), str("10"),
         ];
         let size = 3;
 
-        let splits = split_vec_ref(&mut v, size);
+        let splits = split_vec_copy(&v, size);
 
         for (i, split) in splits.iter().enumerate() {
             println!("Sub-vector {}: {:?}", i, split);

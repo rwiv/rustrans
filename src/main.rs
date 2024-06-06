@@ -28,6 +28,6 @@ async fn run() -> Result<()> {
     }
 
     let new_file_path = project_root.join("tests").join("test2.txt");
-    file::write_vec(&result, &new_file_path)?;
+    file::write_lines(&result, &new_file_path)?;
     Ok(())
 }
