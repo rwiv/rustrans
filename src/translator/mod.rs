@@ -1,13 +1,27 @@
 use std::collections::HashMap;
 use std::mem;
-use anyhow::{anyhow, Result};
 use futures::future::join_all;
+use crate::utils::json::JsonError;
 use crate::utils::list::{split_vec_copy};
 
 pub mod deepl;
 
 pub trait Client {
-    fn translate(&self, str: &str) -> impl std::future::Future<Output = Result<String>> + Send;
+    fn translate(&self, str: &str) -> impl std::future::Future<Output = Result<String, ClientError>> + Send;
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum ClientError {
+    #[error("Json Error: {0}")]
+    Json(#[from] JsonError),
+    #[error("Http Request Error: {0}")]
+    HttpRequest(#[from] reqwest::Error),
+    #[error("Http Header Error: {0}")]
+    HttpHeader(#[from] reqwest::header::InvalidHeaderValue),
+    #[error("{0}")]
+    General(String),
+    #[error("{0}")]
+    Other(#[from] Box<dyn std::error::Error>),
 }
 
 pub struct Translator<T: Client> {
@@ -43,12 +57,12 @@ impl <T: Client> Translator<T> {
 
     async fn translate_map(
         &self, input_map: HashMap<usize, &str>, size: usize,
-    ) -> HashMap<usize, Result<String>> {
+    ) -> HashMap<usize, Result<String, ClientError>> {
         let input_keys: Vec<usize> = input_map.keys().cloned().collect();
         let input_values: Vec<&str> = input_map.values().cloned().collect();
 
         // parallel request
-        let mut translated: Vec<Result<String>> = Vec::new();
+        let mut translated: Vec<Result<String, ClientError>> = Vec::new();
         for sub in split_vec_copy(&input_values, size) {
             let mut tasks = Vec::new();
             for str in sub {
@@ -67,7 +81,8 @@ impl <T: Client> Translator<T> {
                 let val = mem::replace(elem, Ok(String::from("")));
                 result.insert(key, val);
             } else {
-                result.insert(key, Err(anyhow!("not found value")));
+                let err = ClientError::General(String::from("not found value"));
+                result.insert(key, Err(err));
             }
         }
         result

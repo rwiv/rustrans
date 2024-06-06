@@ -1,20 +1,19 @@
-use anyhow::{anyhow, Result};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 use crate::common::conf::read_conf;
-use crate::translator::Client;
+use crate::translator::{Client, ClientError};
 
 pub struct DeeplClient;
 
 impl Client for DeeplClient {
-    async fn translate(&self, str: &str) -> Result<String> {
+    async fn translate(&self, str: &str) -> Result<String, ClientError> {
         let req = Request::new_one_ko(str);
         let res = DeeplClient::translates(req).await?;
         let mut translations = res.translations;
         if let Some(t) = translations.pop() {
             Ok(t.text)
         } else {
-            Err(anyhow!("len is not 1"))
+            Err(ClientError::General(String::from("len is not 1")))
         }
     }
 }
@@ -46,7 +45,7 @@ pub struct Translation {
 }
 
 impl DeeplClient {
-    async fn translates(req: Request<'_>) -> Result<Response> {
+    async fn translates(req: Request<'_>) -> Result<Response, ClientError> {
         let api_key = read_conf()?.deepl.api_key;
 
         let url = "https://api-free.deepl.com/v2/translate";

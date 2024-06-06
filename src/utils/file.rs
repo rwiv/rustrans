@@ -30,7 +30,7 @@ mod tests {
     }
 
     #[test]
-    fn test_write_vec() -> anyhow::Result<()> {
+    fn test_write_vec() -> io::Result<()> {
         let project_root = get_project_root_path();
         let file_path = project_root.join("tests").join("test.txt");
         let strings = read_lines(&file_path)?;

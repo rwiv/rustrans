@@ -1,6 +1,5 @@
 use rustrans::utils::file;
-use anyhow::Result;
-use rustrans::translator::Translator;
+use rustrans::translator::{Translator};
 use rustrans::translator::deepl::DeeplClient;
 use rustrans::utils::path::get_project_root_path;
 
@@ -12,7 +11,7 @@ async fn main() {
     }
 }
 
-async fn run() -> Result<()> {
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let project_root = get_project_root_path();
     let file_path = project_root.join("tests").join("test1.txt");
     let strings = file::read_lines(&file_path)?;
