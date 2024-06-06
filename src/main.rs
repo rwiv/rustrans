@@ -1,8 +1,8 @@
-use rustrans::utils::path;
 use rustrans::utils::file;
 use anyhow::Result;
 use rustrans::translator::Translator;
 use rustrans::translator::deepl::DeeplClient;
+use rustrans::utils::path::get_project_root_path;
 
 #[tokio::main]
 async fn main() {
@@ -13,7 +13,7 @@ async fn main() {
 }
 
 async fn run() -> Result<()> {
-    let project_root = path::get_project_root_path();
+    let project_root = get_project_root_path();
     let file_path = project_root.join("tests").join("test1.txt");
     let strings = file::read_lines(&file_path)?;
     let targets = strings.iter().map(|s| s.as_str()).collect();

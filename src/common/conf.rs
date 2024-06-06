@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use crate::utils::*;
+use crate::utils::json;
+use crate::utils::path::get_project_root_path;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conf {
@@ -13,9 +14,9 @@ pub struct DeeplConf {
 }
 
 pub fn read_conf() -> Result<Conf> {
-    let project_root = path::get_project_root_path();
+    let project_root = get_project_root_path();
     let file_path = project_root.join("configs").join("conf.json");
-    json::read_json_from_file::<Conf>(&file_path)
+    json::read_from_file::<Conf>(&file_path)
 }
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ use std::path::Path;
 use serde::de::DeserializeOwned;
 use anyhow::{Result};
 
-pub fn read_json_from_file<T: DeserializeOwned>(file_path: &Path) -> Result<T> {
+pub fn read_from_file<T: DeserializeOwned>(file_path: &Path) -> Result<T> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let result = serde_json::from_reader(reader)?;
