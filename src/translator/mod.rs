@@ -15,52 +15,55 @@ pub struct Translator<T: Client> {
 }
 
 impl <T: Client> Translator<T> {
-    pub async fn translate<'a>(&'a self, strings: &'a Vec<String>, size: usize) -> Vec<(&str, String)> {
-        let mut targets: HashMap<usize, &str> = HashMap::new();
-        for (idx, value) in strings.iter().enumerate() {
+
+    pub async fn translate<'a>(
+        &'a self, inputs: &'a Vec<&str>, size: usize,
+    ) -> Vec<(&str, String)> {
+        let mut targets = HashMap::new();
+        for (idx, value) in inputs.iter().enumerate() {
             if !value.trim().is_empty() {
-                targets.insert(idx, value);
+                targets.insert(idx, *value);
             }
         }
-        let mut map = self.translate_map(targets, size).await;
-        let mut result: Vec<(&str, String)> = Vec::new();
-        for (idx, org) in strings.iter().enumerate() {
-            if let Some(ret) = map.remove(&idx) {
+        let mut translated_map = self.translate_map(targets, size).await;
+        let mut result = Vec::new();
+        for (idx, org) in inputs.iter().enumerate() {
+            if let Some(ret) = translated_map.remove(&idx) {
                 if let Ok(s) = ret {
-                    result.push((org, s));
+                    result.push((*org, s));
                 } else {
-                    result.push((org, String::from("")));
+                    result.push((*org, String::from("")));
                 }
             } else {
-                result.push((org, String::from("")));
+                result.push((*org, String::from("")));
             }
         }
         result
     }
 
     async fn translate_map(
-        &self, map: HashMap<usize, &str>, size: usize
+        &self, input_map: HashMap<usize, &str>, size: usize,
     ) -> HashMap<usize, Result<String>> {
-        let keys: Vec<usize> = map.keys().cloned().collect();
-        let mut strings: Vec<&str> = map.values().cloned().collect();
+        let input_keys: Vec<usize> = input_map.keys().cloned().collect();
+        let mut input_values: Vec<&str> = input_map.values().cloned().collect();
 
         // parallel request
-        let mut ts_strings: Vec<Result<String>> = Vec::new();
-        for sub in split_vec_move(&mut strings, size) {
+        let mut translated: Vec<Result<String>> = Vec::new();
+        for sub in split_vec_move(&mut input_values, size) {
             let mut tasks = Vec::new();
             for str in sub {
                 tasks.push(self.client.translate(str))
             }
             let sub_results = join_all(tasks).await;
             for seg_result in sub_results {
-                ts_strings.push(seg_result);
+                translated.push(seg_result);
             }
         }
 
         // mapping key-value
         let mut result = HashMap::new();
-        for (idx, key) in keys.into_iter().enumerate() {
-            if let Some(elem) = ts_strings.get_mut(idx) {
+        for (idx, key) in input_keys.into_iter().enumerate() {
+            if let Some(elem) = translated.get_mut(idx) {
                 let val = mem::replace(elem, Ok(String::from("")));
                 result.insert(key, val);
             } else {
@@ -69,19 +72,6 @@ impl <T: Client> Translator<T> {
         }
         result
     }
-
-    // async fn translate_vec(&self, mut strings: Vec<&str>, size: usize) -> Vec<Result<String>> {
-    //     let mut result = Vec::new();
-    //     for sub in split_vec_move(&mut strings, size) {
-    //         let mut tasks = Vec::new();
-    //         for str in sub {
-    //             tasks.push(self.client.translate(str))
-    //         }
-    //         let mut sub_results = join_all(tasks).await;
-    //         result.append(&mut sub_results);
-    //     }
-    //     result
-    // }
 }
 
 #[cfg(test)]
@@ -90,16 +80,16 @@ mod tests {
     use deepl::DeeplClient;
 
     #[tokio::test]
-    async fn test_translate_parallel() {
+    async fn test_translate() {
         let client = DeeplClient {};
         let translator = Translator{ client };
 
         let mut vec = vec!(
-            String::from("hello world!"),
-            String::from("     "),
-            String::from("hello world~"),
-            String::from("hello world!"),
-            String::from(""),
+            "hello world!",
+            "          ",
+            "hello world~",
+            "hello world!",
+            "",
         );
         let results = translator.translate(&mut vec, 3).await;
         for result in results {

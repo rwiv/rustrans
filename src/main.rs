@@ -16,10 +16,11 @@ async fn run() -> Result<()> {
     let project_root = path::get_project_root_path();
     let file_path = project_root.join("tests").join("test1.txt");
     let strings = file::read_lines(&file_path)?;
+    let targets = strings.iter().map(|s| s.as_str()).collect();
 
     let client = DeeplClient {};
     let translator = Translator{ client };
-    let translated = translator.translate(&strings, 20).await;
+    let translated = translator.translate(&targets, 20).await;
 
     let mut result = Vec::new();
     for (before, after) in translated {
