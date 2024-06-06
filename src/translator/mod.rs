@@ -18,9 +18,9 @@ pub enum ClientError {
     HttpRequest(#[from] reqwest::Error),
     #[error("Http Header Error: {0}")]
     HttpHeader(#[from] reqwest::header::InvalidHeaderValue),
-    #[error("{0}")]
+    #[error("General Error: {0}")]
     General(String),
-    #[error("{0}")]
+    #[error("Other Error: {0}")]
     Other(#[from] Box<dyn std::error::Error>),
 }
 
